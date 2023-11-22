@@ -1,0 +1,53 @@
+#include <Arduino.h>
+
+const int in1 = 5;
+const int in2 = 6;
+const int ena = 3;
+const int speed = 175;
+const long duration = 50; // Duration in milliseconds
+
+unsigned long previousMillis = 0;
+
+void setup() {
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(ena, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    controlMotor(command);
+  }
+
+  unsigned long currentMillis = millis();
+  
+  // If duration has passed, stop the motor
+  if (currentMillis - previousMillis >= duration) {
+    stopMotor();
+    previousMillis = currentMillis;
+  }
+}
+
+void controlMotor(char command) {
+  previousMillis = millis(); // Reset the timer at each command
+  switch (command) {
+    case 'L': // Move left
+      digitalWrite(in1, HIGH);
+      digitalWrite(in2, LOW);
+      analogWrite(ena, speed);
+      break;
+    case 'R': // Move right
+      digitalWrite(in1, LOW);
+      digitalWrite(in2, HIGH);
+      analogWrite(ena, speed);
+      break;
+  }
+}
+
+void stopMotor() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  analogWrite(ena, 0); // Stop the motor by setting speed to 0
+}
