@@ -1,0 +1,46 @@
+from flask import Flask, request
+import serial
+import time
+
+app = Flask(__name__)
+
+# Setup the serial connection to Arduino (update the port to the one Arduino is connected to)
+arduino_serial = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+time.sleep(2)  # wait for the serial connection to initialize
+
+# This variable will hold the current target tag ID
+current_target_tag = 0
+
+# Function to send data to Arduino
+def send_to_arduino(data):
+    arduino_serial.write(data.encode())
+    time.sleep(0.1)  # give Arduino time to process the command
+
+@app.route('/receive_data', methods=['POST'])
+def receive_data():
+    global current_target_tag
+    data = request.data.decode('utf-8')  # Decode data from bytes to string
+    tag_id, position = int(data[:-1]), data[-1]  # Split the tag ID and position
+
+    # If the received tag ID is the current target tag, send the command to Arduino
+    if tag_id == current_target_tag:
+        send_to_arduino(position)
+    else:
+        # If the received tag ID is not the current target, do nothing or handle accordingly
+        pass
+
+    # If the current tag is occluded, increment the target tag ID
+    if tag_id == current_target_tag and position == 'O':  # Assuming 'O' is sent when occluded
+        current_target_tag += 1
+        if current_target_tag > 3:
+            current_target_tag = 0  # Reset to the first tag
+
+    # Return a simple acknowledgment
+    return f"Received and processed for tag ID: {tag_id}"
+
+@app.route('/')
+def index():
+    return "ArUco Tag Tracking Flask Server is Running!"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
