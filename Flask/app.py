@@ -1,21 +1,36 @@
-from flask import Flask, render_template, request
-import serial
+from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
-ser = serial.Serial('/dev/ttyACM0', 9600)
+
+# HTML template for the index page
+index_html = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ARUCO Tag Receiver</title>
+</head>
+<body>
+    <h1>ARUCO Tag Receiver Server</h1>
+    <p>Send tag information to this server using the /receive_data endpoint.</p>
+</body>
+</html>
+'''
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Render the index HTML page
+    return render_template_string(index_html)
 
-@app.route('/command', methods=['POST'])
-def command():
-    key = request.form['key']
-    if key == 'left':
-        ser.write(b'L')
-    elif key == 'right':
-        ser.write(b'R')
-    return '', 204
+@app.route('/receive_data', methods=['POST'])
+def receive_data():
+    data = request.data.decode('utf-8')  # Decode data from bytes to string
+    tag_id, position = data[:-1], data[-1]  # Split the tag ID and position
+
+    # Here you would add the logic to handle the received data
+
+    # This is a placeholder for a response
+    return f'Received tag ID: {tag_id} with position: {position}'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
