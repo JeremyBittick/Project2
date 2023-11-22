@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Robot Control</title>
+    <title>Robot Control and Video Stream</title>
     <script>
         document.addEventListener('keydown', function(event) {
             if(event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -16,5 +16,6 @@
 <body>
     <h1>Control the Robot</h1>
     <p>Use the left and right arrow keys to control the robot.</p>
+    <img src="{{ url_for('video_feed') }}" width="640" height="480" />
 </body>
 </html>
