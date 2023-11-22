@@ -1,0 +1,63 @@
+import cv2
+import numpy as np
+import requests
+
+# Define the ArUco dictionary
+aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
+aruco_params = cv2.aruco.DetectorParameters_create()
+
+# Flask server URL
+flask_server_url = 'http://<raspberry_pi_ip>:5000/command'
+
+def send_command_to_server(command):
+    """Send the command to the Flask server via POST request."""
+    try:
+        response = requests.post(flask_server_url, data={'key': command})
+        print(f"Sent command {command}, server responded with status code: {response.status_code}")
+    except Exception as e:
+        print(f"Error sending command to server: {e}")
+
+def track_aruco_and_send_command():
+    """Track ArUco markers and send commands to the Flask server."""
+    cap = cv2.VideoCapture(0)  # Adjust the device number if needed
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to grab frame")
+            break
+
+        # Convert to grayscale
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # Detect ArUco markers
+        corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray, aruco_dict, parameters=aruco_params)
+
+        if ids is not None:
+            for i in range(len(ids)):
+                # Get the center point of the marker
+                c = corners[i][0]
+                x_center = (c[:, 0].sum() / 4.0)
+                mid_x = frame.shape[1] / 2
+
+                if x_center < mid_x:
+                    send_command_to_server('L')  # Marker on the left, send 'L'
+                else:
+                    send_command_to_server('R')  # Marker on the right, send 'R'
+
+                # Draw the detected marker and its ID
+                cv2.aruco.drawDetectedMarkers(frame, corners, ids)
+
+        # Display the resulting frame
+        cv2.imshow('Frame', frame)
+
+        # Press 'q' to exit the loop
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # When everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
+
+if __name__ == '__main__':
+    track_aruco_and_send_command()
