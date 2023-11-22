@@ -1,20 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Robot Control</title>
-    <script>
-        document.addEventListener('keydown', function(event) {
-            if(event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", "/command", true);
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                xhr.send('key=' + (event.key === 'ArrowLeft' ? 'left' : 'right'));
-            }
-        });
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot Controller</title>
+<script>
+function sendCommand(command) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/command", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.send("key=" + command);
+}
+</script>
 </head>
 <body>
-    <h1>Control the Robot</h1>
-    <p>Use the left and right arrow keys to control the robot.</p>
+<h1>Robot Controller</h1>
+<button onclick="sendCommand('left')">Turn Left</button>
+<button onclick="sendCommand('right')">Turn Right</button>
 </body>
 </html>
